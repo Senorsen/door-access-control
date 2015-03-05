@@ -1,0 +1,14 @@
+*.swp
+
+doorsend
+*.gcc
+*.gdb
+*.o
+*.gcda
+
+send
+text.txt
+data
+
+config.h
+
