@@ -280,7 +280,7 @@ int loop_check_door(char * filename) {
         if (ret == 1 && lastret == 0) {
             printf("Door opened.\n");
             char cmd[255];
-            sprintf(cmd, "mplayer \"%s\"", filename);
+            sprintf(cmd, "%s", filename);
             int sys_ret = system(cmd);
         } else if (ret == 0 && lastret == 1) {
             printf("Door closed.\n");

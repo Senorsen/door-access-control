@@ -14,7 +14,6 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#define VERSION     "0.4.3"
 #define PROGNAME    "doorsend"
 #define AUTHOR      "Senorsen"
 

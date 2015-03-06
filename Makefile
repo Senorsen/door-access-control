@@ -1,6 +1,9 @@
+#!/bin/make -f
+
+VERSION=0.4.4
 CC=gcc
 AR=gccar
-CFLAGS= -std=c99 -O2 -Wall -D DATE="\"`date`\"" -D GITCOMMIT="\"`git rev-parse HEAD`\"" -static
+CFLAGS= -std=c99 -O2 -Wall -D VERSION="\"$(VERSION)\"" -D DATE="\"`date`\"" -D GITCOMMIT="\"`git rev-parse HEAD`\"" -static
 EXEC=doorsend
 OBJS=doorsend.o common.o temp.o
 
