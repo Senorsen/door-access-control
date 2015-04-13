@@ -38,13 +38,15 @@ uint16_t read_checksum(uint8_t * data, uint16_t length);
 
 int socket_init(int prog);
 
+void socket_end();
+
 int process_data(int prog, uint8_t control[2], uint8_t data[], uint16_t length, uint8_t * rets, uint16_t * ret_length);
 
 int dec_fake_hex(uint16_t n);
 
-int store_int16(uint16_t n, uint8_t * buf);
+void store_int16(uint16_t n, uint8_t * buf);
 
-int store_int32(uint32_t n, uint8_t * buf);
+void store_int32(uint32_t n, uint8_t * buf);
 
 uint16_t convert_int16(uint8_t * buf);
 
@@ -52,13 +54,13 @@ uint32_t convert_int32(uint8_t * buf);
 
 int mask_check(uint8_t num, uint8_t pos);
 
-int store_wiegand(uint32_t wiegand, uint8_t * buf);
+void store_wiegand(uint32_t wiegand, uint8_t * buf);
 
 uint32_t read_card_wiegand(uint8_t * buf);
 
 uint32_t read_card_org_part(uint8_t * buf);
 
-int store_wiegand_date(int type, int year, int month, int day, int hour, int minute, int second, uint8_t * buf);
+void store_wiegand_date(int type, int year, int month, int day, int hour, int minute, int second, uint8_t * buf);
 
 wgDate read_wiegand_date(uint8_t * buf);
 

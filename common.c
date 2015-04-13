@@ -77,9 +77,10 @@ int socket_init(int prog) {
     tv_out.tv_sec = 10; // 超时时间
     tv_out.tv_usec = 0;
     printf("[INFO] setsockopt = %d\n", setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv_out, sizeof(tv_out)));
+    return 0;
 }
 
-int socket_end() {
+void socket_end() {
     close(sockfd);
 }
 
@@ -151,13 +152,13 @@ int dec_fake_hex(uint16_t n) {
     return n / 10 * 16 + n % 10;
 }
 
-int store_int16(uint16_t n, uint8_t * buf) {
+void store_int16(uint16_t n, uint8_t * buf) {
     // 大端
     buf[0] = n % 0x100;
     buf[1] = n / 0x100;
 }
 
-int store_int32(uint32_t n, uint8_t * buf) {
+void store_int32(uint32_t n, uint8_t * buf) {
     buf[0] = n % 0x100;
     buf[1] = n % 0x10000 /  0x100;
     buf[2] = n % 0x1000000 / 0x10000;
@@ -180,13 +181,13 @@ int mask_check(uint8_t num, uint8_t pos) {
     return !! (num & (1 << pos));
 }
 
-int store_wiegand(uint32_t wiegand, uint8_t * buf) {
+void store_wiegand(uint32_t wiegand, uint8_t * buf) {
     store_int16(wiegand % 100000, buf);
     buf[2] = wiegand / 100000;
 }
 
 uint32_t read_card_wiegand(uint8_t * buf) {
-    if LIKELY (buf[0] & buf[1] & buf[2] == 0xff) {
+    if LIKELY ((buf[0] & buf[1] & buf[2]) == 0xff) {
         return 0;
     }
     uint32_t ret, arg2, arg0;
@@ -197,14 +198,14 @@ uint32_t read_card_wiegand(uint8_t * buf) {
 }
 
 uint32_t read_card_org_part(uint8_t * buf) {
-    if LIKELY (buf[0] & buf[1] & buf[2] == 0xff) {
+    if LIKELY ((buf[0] & buf[1] & buf[2]) == 0xff) {
         return 0;
     }
     uint8_t new_buf[4] = {buf[0], buf[1], buf[2], 0};
     return convert_int32(new_buf);
 }
 
-int store_wiegand_date(int type, int year, int month, int day, int hour, int minute, int second, uint8_t * buf) {
+void store_wiegand_date(int type, int year, int month, int day, int hour, int minute, int second, uint8_t * buf) {
     // simulation for msDateToWgDate encode. 
     buf[1] = year % 100 * 2 + month / 8;
     buf[0] = month / 8 * day;
@@ -230,10 +231,10 @@ wgDate read_wiegand_date(uint8_t * buf) {
     timenow = localtime(&now);
     int year, month, day, hour, minute, second;
     wgDate date;
+    year = timenow->tm_year + 1900;
     if UNLIKELY (year % 100 > 60 && num < 60) {
         num += 60;
     }
-    year = timenow->tm_year + 1900;
     if UNLIKELY (year < 2000) {
         year = 2000;
     }

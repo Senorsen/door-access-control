@@ -1,6 +1,6 @@
 #!/bin/make -f
 
-VERSION=0.4.4
+VERSION=0.4.5
 CC=gcc
 AR=gccar
 CFLAGS= -std=c99 -O2 -Wall -D VERSION="\"$(VERSION)\"" -D DATE="\"`date`\"" -D GITCOMMIT="\"`git rev-parse HEAD`\"" -static
