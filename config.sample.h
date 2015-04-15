@@ -25,6 +25,10 @@
 #define GITCOMMIT "unknown"
 #endif
 
+#ifndef VERSION
+#define VERSION "unknown"
+#endif
+
 #define DOOR_IPADDR "xxx.xxx.xxx.xxx"
 #define DOOR_SN_1    0xab           // DOOR-SN: 0xabcd (four hexadecimal num)
 #define DOOR_SN_2    0xcd

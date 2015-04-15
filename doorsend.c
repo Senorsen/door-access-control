@@ -129,7 +129,8 @@ int read_card(int prog, uint16_t begin) {
         if UNLIKELY (!prog) printf("[RESULT] ret=255\n");
         return 0xff;
     }
-    if (!prog) printf("[RESULT] ret=0,rfid_uid=%d@%s@%d@%06x\n", rfid_uid, str_date, status, rfid_uid_org);
+    if (!prog) 
+        printf("[RESULT] ret=0,rfid_uid=%d@%s@%d@%06x\n", rfid_uid, str_date, status, rfid_uid_org);
     ret_vars[0] = (uint32_t *) malloc(sizeof(uint32_t));
     ret_vars[1] = (uint8_t *) malloc(256);
     ret_vars[2] = (uint8_t *) malloc(sizeof(uint8_t));
@@ -290,15 +291,32 @@ int loop_check_door(char * filename) {
     }
 }
 
+// Get door permission status (open/close/normal)
+uint8_t get_door_perm_status(int prog) {
+    uint8_t control[] = {0xf1, 0x10};
+    uint8_t data[1024] = {0x1a};
+    uint16_t length = 1;
+    uint8_t rets[1024];
+    uint16_t ret_length;
+    int ret;
+    if UNLIKELY (!prog) printf("[FUNCTION] get_door_perm_status\n");
+    ret = process_data(prog, control, data, length, rets, &ret_length);
+    return rets[0];
+}
+
 int get_detail(int prog, uint16_t count) {
+
+    char *perm_statuses[] = {NULL, "open", "close", "normal"};
+
     uint8_t control[] = {0x81, 0x10};
-    uint8_t data[1024] = {0};
+    uint8_t data[1024] = {0x00};
     store_int16(count, data + 0);
     uint16_t length = 2;
     uint8_t rets[1024];
     uint16_t ret_length;
     int ret;
     if UNLIKELY (!prog) printf("[FUNCTION] get_detail\n");
+    uint8_t perm_status = get_door_perm_status(prog);
     ret = process_data(prog, control, data, length, rets, &ret_length);
     char *szweekday[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
     if LIKELY (ret == 0) {
@@ -313,8 +331,9 @@ int get_detail(int prog, uint16_t count) {
         printf("Count of logs: \t%d\n", logs_count);
         printf("Count of Permissions: \t%d\n", permissions_count);
         printf("Status: \n");
-        printf("    Last RFID-UID: %d\n", rfid_uid);
+        printf("    Last RFID-UID:  %d\n", rfid_uid);
         printf("    Status of door: %d = %s\n", door_status, door_status ? "Opening" : "Not opening (!= closed)");
+        printf("    Perm-status:    %d = %s\n", perm_status, perm_statuses[perm_status]);
         printf("    Status of warn: %d\n", warn_status);
         disp_warn(warn_status, 0);
         uint8_t bits[4];
@@ -323,6 +342,7 @@ int get_detail(int prog, uint16_t count) {
         printf("[RESULT] logtime=%02x%02x%02x%02x%02x%02x%02x,", rets[0], rets[1], rets[2], rets[3], rets[4], rets[5], rets[6]);
         printf("logscount=%d,permissionscount=%d,", logs_count, permissions_count);
         printf("doorstatus=%d,warnstatus=%d,warnstatsbits=%d%d%d%d,", door_status, warn_status, bits[0], bits[1], bits[2], bits[3]);
+        printf("perm_status=%d,", perm_status);
         printf("warnstatus_str=");
         disp_warn(warn_status, 1);
         printf(",");
