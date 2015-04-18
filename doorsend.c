@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014, 2015 Sen "Senorsen" Zhang <sen@senorsen.com>
+ * Copyright (C) 2014, 2015 Senorsen (Zhang Sen) <sen@senorsen.com>
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -30,6 +30,8 @@
 #include "common.h"
 #include "temp.h"
 
+#define COPYRIGHT "Senorsen (Zhang Sen) <sen@senorsen.com>"
+
 char hostname[64];
 int temp;
 char temp_str[255];
@@ -52,7 +54,7 @@ uint8_t parse_warn(uint8_t *bits) {
 
 int disp_warn(uint8_t num, int is_internal) {
     uint8_t bits[4];
-    int i, ret = read_warn(num, bits);
+    int ret = read_warn(num, bits);
     char *prefix_blank, *suffix_lf;
     if (is_internal) {
         prefix_blank = "";
@@ -82,7 +84,7 @@ int get_logs_count(int prog) {
     uint8_t control[] = {0x8c, 0x10};
     uint8_t data[1024] = {0};
     uint16_t length = 0;
-    printf("[FUNCTION] get_logs_count\n");
+    if UNLIKELY (!prog) print_function("get_logs_count");
     uint8_t rets[1024];
     uint16_t ret_length;
     int ret;
@@ -112,7 +114,7 @@ int read_card(int prog, uint16_t begin) {
     uint8_t rets[1024];
     uint16_t ret_length;
     int ret;
-    if UNLIKELY (!prog) printf("[FUNCTION] read_card\n");
+    if UNLIKELY (!prog) print_function("read_card");
     ret = process_data(prog, control, data, length, rets, &ret_length);
     if LIKELY (ret) {
         if UNLIKELY (!prog) printf("[RESULT] ret=1\n");
@@ -143,7 +145,7 @@ int read_card(int prog, uint16_t begin) {
 }
 
 int read_card_all(int prog, uint16_t begin) {
-    if UNLIKELY (!prog) printf("[FUNCTION] read_card_all\n");
+    if UNLIKELY (!prog) print_function("read_card_all");
     int logs_count = get_logs_count(TRUE);
     if UNLIKELY (begin < 1) begin = 1;
     int read_count = logs_count - begin + 1;
@@ -157,6 +159,10 @@ int read_card_all(int prog, uint16_t begin) {
             return ret;
         }
         printf("%d@%s@%d@%06x|", *(uint32_t *)ret_vars[0], (char *)ret_vars[1], *(uint8_t *)ret_vars[2], *(uint32_t *)ret_vars[3]);
+        free(ret_vars[0]);
+        free(ret_vars[1]);
+        free(ret_vars[2]);
+        free(ret_vars[3]);
     }
     printf("|,ret=%d\n", ret);
     return ret;
@@ -270,12 +276,15 @@ int ret_check_door() {
     uint16_t ret_length;
     int ret;
     ret = process_data(1, control, data, length, rets, &ret_length);
-    return rets[20];
+    if LIKELY (ret == 0)
+        return rets[20];
+    else
+        return -1;
 }
 
 int loop_check_door(char * filename) {
     int lastret = 0;
-    printf("[FUNCTION] loop_check_door\n");
+    print_function("loop_check_door");
     while (1) {
         int ret = ret_check_door();
         if (ret == 1 && lastret == 0) {
@@ -283,6 +292,8 @@ int loop_check_door(char * filename) {
             char cmd[255];
             sprintf(cmd, "%s", filename);
             int sys_ret = system(cmd);
+            if (!sys_ret)
+                fprintf(stderr, "Command %s : execution failed\n", cmd);
         } else if (ret == 0 && lastret == 1) {
             printf("Door closed.\n");
         }
@@ -299,9 +310,12 @@ uint8_t get_door_perm_status(int prog) {
     uint8_t rets[1024];
     uint16_t ret_length;
     int ret;
-    if UNLIKELY (!prog) printf("[FUNCTION] get_door_perm_status\n");
+    if UNLIKELY (!prog) print_function("get_door_perm_status");
     ret = process_data(prog, control, data, length, rets, &ret_length);
-    return rets[0];
+    if (ret != 0) 
+        return -1;
+    else
+        return rets[0];
 }
 
 int get_detail(int prog, uint16_t count) {
@@ -315,7 +329,7 @@ int get_detail(int prog, uint16_t count) {
     uint8_t rets[1024];
     uint16_t ret_length;
     int ret;
-    if UNLIKELY (!prog) printf("[FUNCTION] get_detail\n");
+    if UNLIKELY (!prog) print_function("get_detail");
     uint8_t perm_status = get_door_perm_status(prog);
     ret = process_data(prog, control, data, length, rets, &ret_length);
     char *szweekday[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
@@ -347,11 +361,11 @@ int get_detail(int prog, uint16_t count) {
         disp_warn(warn_status, 1);
         printf(",");
         printf("rfiduid=%d,", rfid_uid);
-        printf("cli_version=%s,cli_copyright=Sen \"Senorsen\" Zhang <sen@senorsen.com>,", VERSION);
+        printf("cli_version=%s,cli_copyright=%s,", VERSION, COPYRIGHT);
         printf("gitrev=%s,", GITCOMMIT);
         printf("build_date=%s,", DATE);
         printf("hostname=%s,", hostname);
-        printf("temp=%d,temp_str=%s,", temp, temp_str);
+        //printf("temp=%d,temp_str=%s,", temp, temp_str);
         printf("ret=0\n");
         return 0;
     } else {
@@ -379,7 +393,7 @@ int sync_system_time(int prog) {
     minute = timenow->tm_min;
     second = timenow->tm_sec;
     char *szweekday[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
-    printf("[FUNCTION] sync_system_time\n");
+    if LIKELY (!prog) print_function("sync_system_time");
     printf("System time: %04d-%02d-%02d %s %02d:%02d:%02d\n", year, month, day, szweekday[weekday], hour, minute, second);
     data[0] = yearh = dec_fake_hex(year % 100);
     data[1] = monthh = dec_fake_hex(month);
@@ -409,16 +423,16 @@ int reset_warn(int prog) {
     uint8_t data[1024] = {0};
     uint16_t length = 0, ret_length;
     uint8_t rets[1024];
-    if UNLIKELY (!prog) printf("[FUNCTION] reset_warn\n");
+    if UNLIKELY (!prog) print_function("reset_warn");
     int ret = process_data(prog, control, data, length, rets, &ret_length);
     if LIKELY (ret == 0) {
         int result;
+        result = rets[0];
         if LIKELY (rets[0] == 1) {
             if UNLIKELY (!prog) printf("Warn has been reset.\n");
         } else {
             if UNLIKELY (!prog) printf("Warn result unknown: %d\n", result);
         }
-        result = rets[0];
         printf("[RESULT] result=%d,ret=0\n", result);
     } else {
         if UNLIKELY (!prog) printf("Failed to reset warn status.\n");
@@ -433,7 +447,7 @@ int open_door(int prog) {
     uint8_t data[1024] = {0x01, 0x01};
     uint16_t length = 2, ret_length;
     uint8_t rets[1024];
-    if UNLIKELY (!prog) printf("[FUNCTION] open_door\n");
+    if UNLIKELY (!prog) print_function("open_door");
     int ret = process_data(prog, control, data, length, rets, &ret_length);
     if LIKELY (ret == 0) {
         printf("Door temporarily opened.\n");
@@ -451,7 +465,7 @@ int set_door_status(int prog, int status) {
     uint8_t data[1024] = {0x01, (uint8_t) status, 0x32, 0x00};
     uint16_t length = 4, ret_length;
     uint8_t rets[1024];
-    if UNLIKELY (!prog) printf("[FUNCTION] set_door_status\n");
+    if UNLIKELY (!prog) print_function("set_door_status");
     int ret = process_data(prog, control, data, length, rets, &ret_length);
     if LIKELY (ret == 0 && 
                rets[0] == 0x01 && 
@@ -481,9 +495,8 @@ print_help:
         printf("    Build date:  %s\n", DATE);
         printf("    Works for:   %s\n", hostname);
         printf("    Door temp:   %d == %s\n", temp, temp_str);
-        printf("Copyright (C) 2014, 2015 Sen \"Senorsen\" Zhang <sen@senorsen.com>\n");
+        printf("Copyright (C) 2014, 2015 %s\n", COPYRIGHT);
         printf("All rights reserved. \n");
-        printf("Contact: sen@senorsen.com https://blog.senorsen.com\n");
         printf("Usage: %s <func>\n", argv[0]);
         printf("function list:\n");
         printf("    time        synchronize door's time with local system\n");
@@ -514,10 +527,10 @@ print_help:
         printf("    Version:     %s\n", VERSION);
         printf("    Build date:  %s\n", DATE);
         printf("    Works for:   %s\n", hostname);
-        printf("    Door temp:   %d == %s\n", temp, temp_str);
-        printf("Copyright (C) 2014, 2015 Sen \"Senorsen\" Zhang <sen@senorsen.com>\n");
+        //printf("    Door temp:   %d == %s\n", temp, temp_str);
+        printf("Copyright (C) 2014, 2015 %s\n", COPYRIGHT);
         printf("All rights reserved. \n");
-        printf("[RESULT] ret=0,version=%s,build_date=%s,temp=%d,temp_str=%s\n", VERSION, DATE, temp, temp_str);
+        printf("[RESULT] ret=0,version=%s,build_date=%s\n", VERSION, DATE);
         return 0;
     } else if LIKELY (strcmp(argv[1], "readall") == 0) {
         int log_begin = 1;
@@ -567,6 +580,7 @@ print_help:
         }
         int rfid_uid = atoi(argv[2]);
         ret = add_privilege(0, rfid_uid);
+        free(ret_vars[0]);
     } else if (strcmp(argv[1], "rempriv") == 0) {
         if (argc < 3) {
             printf("[ERROR] parameter id cannot be null!\n");
@@ -574,6 +588,7 @@ print_help:
         }
         int rfid_uid = atoi(argv[2]);
         ret = remove_privilege(0, rfid_uid);
+        free(ret_vars[0]);
     } else {
         printf("No such function! Try %s --help\n", argv[0]);
         printf("[RESULT] ret=1,msg=NO_SUCH_FUNCTION\n");
