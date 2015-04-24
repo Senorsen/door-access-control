@@ -32,6 +32,8 @@
 
 #define COPYRIGHT "Senorsen (Zhang Sen) <sen@senorsen.com>"
 
+#define PRINTFUNC print_function(__FUNCTION__)
+
 char hostname[64];
 int temp;
 char temp_str[255];
@@ -84,7 +86,7 @@ int get_logs_count(int prog) {
     uint8_t control[] = {0x8c, 0x10};
     uint8_t data[1024] = {0};
     uint16_t length = 0;
-    if UNLIKELY (!prog) print_function("get_logs_count");
+    if UNLIKELY (!prog) PRINTFUNC;
     uint8_t rets[1024];
     uint16_t ret_length;
     int ret;
@@ -114,7 +116,7 @@ int read_card(int prog, uint16_t begin) {
     uint8_t rets[1024];
     uint16_t ret_length;
     int ret;
-    if UNLIKELY (!prog) print_function("read_card");
+    if UNLIKELY (!prog) PRINTFUNC;
     ret = process_data(prog, control, data, length, rets, &ret_length);
     if LIKELY (ret) {
         if UNLIKELY (!prog) printf("[RESULT] ret=1\n");
@@ -145,7 +147,7 @@ int read_card(int prog, uint16_t begin) {
 }
 
 int read_card_all(int prog, uint16_t begin) {
-    if UNLIKELY (!prog) print_function("read_card_all");
+    if UNLIKELY (!prog) PRINTFUNC;
     int logs_count = get_logs_count(TRUE);
     if UNLIKELY (begin < 1) begin = 1;
     int read_count = logs_count - begin + 1;
@@ -175,7 +177,7 @@ int clear_privilege(int prog) {
     uint8_t rets[1024];
     uint16_t ret_length;
     int ret;
-    if UNLIKELY (!prog) print_function("clear_privilege");
+    if UNLIKELY (!prog) PRINTFUNC;
     ret = process_data(prog, control, data, length, rets, &ret_length);
     if UNLIKELY (ret) {
         if UNLIKELY (!prog) printf("[RESULT] ret=%d\n", ret);
@@ -192,7 +194,7 @@ int remove_privilege(int prog, int rfid_uid) {
     uint8_t rets[1024];
     uint16_t ret_length;
     int ret;
-    if UNLIKELY (!prog) print_function("remove_privilege");
+    if UNLIKELY (!prog) PRINTFUNC;
     // Data order (fixed to single: 0)
     store_int16(0, data);
     // Wiegand card ID
@@ -219,7 +221,7 @@ int add_privilege(int prog, int rfid_uid) {
     uint8_t rets[1024];
     uint16_t ret_length;
     int ret;
-    if UNLIKELY (!prog) print_function("add_privilege");
+    if UNLIKELY (!prog) PRINTFUNC;
     // Data order (fixed to single: 1)
     store_int16(1, data);
     // Wiegand card ID
@@ -254,7 +256,7 @@ int clear_record(int prog) {
     uint8_t rets[1024];
     uint16_t ret_length;
     int ret;
-    if UNLIKELY (!prog) print_function("clear_record");
+    if UNLIKELY (!prog) PRINTFUNC;
     int rec_count = get_logs_count(TRUE);
     store_int16(rec_count, data);
     ret = process_data(prog, control, data, length, rets, &ret_length);
@@ -284,7 +286,7 @@ int ret_check_door() {
 
 int loop_check_door(char * filename) {
     int lastret = 0;
-    print_function("loop_check_door");
+    PRINTFUNC;
     while (1) {
         int ret = ret_check_door();
         if (ret == 1 && lastret == 0) {
@@ -310,7 +312,7 @@ uint8_t get_door_perm_status(int prog) {
     uint8_t rets[1024];
     uint16_t ret_length;
     int ret;
-    if UNLIKELY (!prog) print_function("get_door_perm_status");
+    if UNLIKELY (!prog) PRINTFUNC;
     ret = process_data(prog, control, data, length, rets, &ret_length);
     if (ret != 0) 
         return -1;
@@ -329,7 +331,7 @@ int get_detail(int prog, uint16_t count) {
     uint8_t rets[1024];
     uint16_t ret_length;
     int ret;
-    if UNLIKELY (!prog) print_function("get_detail");
+    if UNLIKELY (!prog) PRINTFUNC;
     uint8_t perm_status = get_door_perm_status(prog);
     ret = process_data(prog, control, data, length, rets, &ret_length);
     char *szweekday[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
@@ -393,7 +395,7 @@ int sync_system_time(int prog) {
     minute = timenow->tm_min;
     second = timenow->tm_sec;
     char *szweekday[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
-    if LIKELY (!prog) print_function("sync_system_time");
+    if LIKELY (!prog) PRINTFUNC;
     printf("System time: %04d-%02d-%02d %s %02d:%02d:%02d\n", year, month, day, szweekday[weekday], hour, minute, second);
     data[0] = yearh = dec_fake_hex(year % 100);
     data[1] = monthh = dec_fake_hex(month);
@@ -423,7 +425,7 @@ int reset_warn(int prog) {
     uint8_t data[1024] = {0};
     uint16_t length = 0, ret_length;
     uint8_t rets[1024];
-    if UNLIKELY (!prog) print_function("reset_warn");
+    if UNLIKELY (!prog) PRINTFUNC;
     int ret = process_data(prog, control, data, length, rets, &ret_length);
     if LIKELY (ret == 0) {
         int result;
@@ -447,7 +449,7 @@ int open_door(int prog) {
     uint8_t data[1024] = {0x01, 0x01};
     uint16_t length = 2, ret_length;
     uint8_t rets[1024];
-    if UNLIKELY (!prog) print_function("open_door");
+    if UNLIKELY (!prog) PRINTFUNC;
     int ret = process_data(prog, control, data, length, rets, &ret_length);
     if LIKELY (ret == 0) {
         printf("Door temporarily opened.\n");
@@ -465,7 +467,7 @@ int set_door_status(int prog, int status) {
     uint8_t data[1024] = {0x01, (uint8_t) status, 0x32, 0x00};
     uint16_t length = 4, ret_length;
     uint8_t rets[1024];
-    if UNLIKELY (!prog) print_function("set_door_status");
+    if UNLIKELY (!prog) PRINTFUNC;
     int ret = process_data(prog, control, data, length, rets, &ret_length);
     if LIKELY (ret == 0 && 
                rets[0] == 0x01 && 

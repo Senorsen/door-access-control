@@ -28,7 +28,7 @@ typedef struct nodeWgDate {
     int hour, minute, second;
 } wgDate;
 
-void print_function(char * function_name);
+void print_function(const char * function_name);
 
 uint16_t calc_checksum(uint8_t * data, uint16_t length);
 

@@ -32,7 +32,7 @@ struct sockaddr_in adr_srvr;
 struct sockaddr_in adr_inet;
 struct sockaddr_in adr_clnt;
 
-void print_function(char * function_name) {
+void print_function(const char * function_name) {
     printf("[FUNCTION] %s\n", function_name);
 }
 
