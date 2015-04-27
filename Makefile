@@ -1,8 +1,7 @@
 #!/bin/make -f
 
 VERSION=`cat VERSION`
-CC=gcc
-AR=gccar
+CC=clang
 CFLAGS= -std=c99 -O2 -Wall -D VERSION="\"$(VERSION)\"" -D DATE="\"`date`\"" -D GITCOMMIT="\"`git rev-parse HEAD`\"" -static
 EXEC=doorsend
 OBJS=doorsend.o common.o temp.o

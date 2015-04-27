@@ -1,6 +1,6 @@
 # door-access-control
 
-A CLI tool under Linux written in C, in order to communicate with wiegand-card doors using their protocol.
+A CLI tool under Linux / FreeBSD written in C, in order to communicate with wiegand-card doors using a special protocol.
 
 Author: Senorsen <sen@senorsen.com>
 
